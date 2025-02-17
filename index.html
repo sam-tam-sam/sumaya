@@ -41,7 +41,9 @@
             justify-content: center;
             gap: 40px;
             width: 100%;
-            margin-top: 100px;
+            margin-top: 50px;
+            padding: 0 15px;
+            box-sizing: border-box;
         }
 
         .heart-container {
@@ -92,6 +94,8 @@
             z-index: 1;
             font-family: 'Lemonada', cursive;
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            width: 100%;
+            text-align: center;
         }
 
         .message {
@@ -106,26 +110,26 @@
             line-height: 1.6;
             min-height: 80px;
             transition: opacity 0.3s;
-            margin-top: 100px;
         }
 
         #secret-button {
             background: linear-gradient(45deg, #ff3366, #ff6699);
             border: none;
-            padding: 10px 20px;
+            padding: 15px 30px;
             border-radius: 30px;
             color: white;
             font-family: 'Cairo', sans-serif;
-            font-size: 1em;
+            font-size: 1.2em;
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
             position: fixed;
-            bottom: 60px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             width: auto;
             min-width: 160px;
+            z-index: 100;
         }
 
         .particle {
@@ -135,56 +139,74 @@
             animation: float 3s linear forwards;
             opacity: 0.9;
             filter: drop-shadow(0 0 5px rgba(255,51,102,0.5));
+            z-index: 50;
         }
 
         @media (max-width: 600px) {
-            body {
-                gap: 20px;
-                padding-top: 15px;
-                margin-top: 10px;
-            }
-
             .content-wrapper {
                 gap: 25px;
+                margin-top: 30px;
             }
             
             .heart-container {
-                width: 130px;
-                height: 130px;
-                margin-top: 100px;
-                
+                width: 150px;
+                height: 150px;
             }
             
             .heart::before,
             .heart::after {
-                width: 65px;
-                height: 104px;
-                
+                width: 75px;
+                height: 120px;
             }
 
             .heart::before {
-                left: 65px;
+                left: 75px;
             }
             
             .name {
-                font-size: 1.8em;
+                font-size: 2em;
             }
             
             .message {
-                font-size: 1.2em;
+                font-size: 1.4em;
                 margin: 10px 0;
-                margin-top: 50;
+                min-height: 60px;
             }
             
             #secret-button {
-                font-size: 0.85em;
-                padding: 6px 14px;
-                min-width: 120px;
-                bottom: 40px;
+                font-size: 1em;
+                padding: 12px 25px;
+                min-width: 140px;
+                bottom: 30px;
             }
 
             .particle {
                 font-size: 24px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .heart-container {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .heart::before,
+            .heart::after {
+                width: 60px;
+                height: 96px;
+            }
+
+            .heart::before {
+                left: 60px;
+            }
+            
+            .name {
+                font-size: 1.6em;
+            }
+            
+            .message {
+                font-size: 1.2em;
             }
         }
     </style>
@@ -207,46 +229,72 @@
                 src: ['magic-sound.mp3'],
                 html5: true,
                 volume: 0.5,
-                onplayerror: function() {
-                    this.once('unlock', () => this.play());
-                }
+                preload: true
             }),
             heart: new Howl({ 
                 src: ['heartbeat.mp3'],
                 loop: true,
                 volume: 0.4,
-                html5: true
+                html5: true,
+                preload: true
             }),
             music: new Howl({
                 src: ['romantic-music.mp3'],
                 volume: 0.3,
                 loop: true,
-                html5: true
+                html5: true,
+                preload: true
             })
         };
 
         const loveMessages = [
             "أنتِ شعاع النور في ظلام حياتي 🌟",
             "حبك كالماء للوردة.. لا أستطيع العيش بدونه 🌹",
-            "قلبي ينتمي لك منذ اللحظة الأولى 💞",
+            "قلبي ينتمي لك منذ اللحظة الأولى 💞"
         ];
 
         let audioEnabled = false;
+        let audioContext = null;
 
-        const enableAudio = () => {
-            if (!audioEnabled) {
-                Howler.autoUnlock = true;
-                if (!sounds.music.playing()) sounds.music.play();
-                if (!sounds.heart.playing()) sounds.heart.play();
-                audioEnabled = true;
+        const initializeAudio = () => {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
             }
         };
 
-        // تشغيل الصوت عند تحميل الصفحة
-        window.addEventListener('load', enableAudio);
+        const enableAudio = () => {
+            if (!audioEnabled) {
+                initializeAudio();
+                
+                // Force unlock audio on iOS
+                Howler.autoUnlock = true;
+                Howler.volume(1.0);
+                
+                // Start both audio tracks
+                if (!sounds.music.playing()) {
+                    sounds.music.play();
+                }
+                if (!sounds.heart.playing()) {
+                    sounds.heart.play();
+                }
+                
+                audioEnabled = true;
 
-        document.addEventListener('click', enableAudio);
-        document.addEventListener('touchstart', enableAudio);
+                // Setup periodic check for iOS
+                setInterval(() => {
+                    if (!sounds.music.playing()) sounds.music.play();
+                    if (!sounds.heart.playing()) sounds.heart.play();
+                }, 1000);
+            }
+        };
+
+        // Handle various user interactions
+        ['click', 'touchstart', 'touchend'].forEach(event => {
+            document.addEventListener(event, enableAudio, { passive: true });
+        });
 
         const createHearts = (x, y) => {
             const colors = ['#ff3366', '#ff6699', '#ff0066'];
@@ -256,7 +304,10 @@
                 heart.style.color = colors[Math.floor(Math.random() * colors.length)];
                 heart.style.left = `${x + (Math.random() - 0.5) * 150}px`;
                 heart.style.top = `${y + (Math.random() - 0.5) * 150}px`;
-                heart.style.transform = `scale(${0.5 + Math.random() * 0.8}) rotate(${Math.random() * 360}deg)`;
+                heart.style.transform = `
+                    scale(${0.5 + Math.random() * 0.8}) 
+                    rotate(${Math.random() * 360}deg)
+                `;
                 heart.textContent = Math.random() > 0.3 ? '❤️' : '💖';
                 document.body.appendChild(heart);
                 heart.addEventListener('animationend', () => heart.remove());
@@ -264,12 +315,12 @@
         };
 
         document.getElementById('secret-button').addEventListener('click', (e) => {
-            if (!audioEnabled) enableAudio();
+            enableAudio();
             
             if (sounds.magic.playing()) sounds.magic.stop();
             sounds.magic.play();
             
-            createHearts(e.clientX, e.clientY);
+            createHearts(e.clientX || window.innerWidth / 2, e.clientY || window.innerHeight / 2);
             
             const messageElement = document.getElementById('main-message');
             messageElement.style.opacity = 0;
@@ -279,12 +330,28 @@
             }, 300);
         });
 
+        // Handle iOS specific audio resuming
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && audioEnabled) {
+                    sounds.music.play();
+                    sounds.heart.play();
+                }
+            });
+
+            window.addEventListener('focus', () => {
+                if (audioEnabled) {
+                    sounds.music.play();
+                    sounds.heart.play();
+                }
+            });
+        }
+
+        // Ensure audio keeps playing
         setInterval(() => {
-            if(audioEnabled) {
-                document.querySelector('.heart').style.animation = 'none';
-                setTimeout(() => {
-                    document.querySelector('.heart').style.animation = 'pulse 1s infinite';
-                }, 50);
+            if (audioEnabled) {
+                if (!sounds.music.playing()) sounds.music.play();
+                if (!sounds.heart.playing()) sounds.heart.play();
             }
         }, 1000);
     </script>
