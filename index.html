@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>رسالة حب تفاعلية</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Lemonada&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
@@ -31,7 +31,7 @@
             overflow: hidden;
             position: relative;
             gap: 30px;
-            padding: 20px 15px 100px;
+            padding-top: 20px;
         }
 
         .content-wrapper {
@@ -41,13 +41,14 @@
             justify-content: center;
             gap: 40px;
             width: 100%;
-            margin-top: 50px;
+            margin-top: 100px;
         }
 
         .heart-container {
             position: relative;
             width: 200px;
             height: 200px;
+            margin: 0;
             filter: drop-shadow(0 0 15px rgba(255, 51, 102, 0.7));
         }
 
@@ -97,6 +98,7 @@
             font-size: 1.8em;
             color: #ff3366;
             text-align: center;
+            margin: 15px 0;
             padding: 0 15px;
             width: 100%;
             max-width: 600px;
@@ -104,13 +106,13 @@
             line-height: 1.6;
             min-height: 80px;
             transition: opacity 0.3s;
-            margin: 20px 0;
+            margin-top: 100px;
         }
 
         #secret-button {
             background: linear-gradient(45deg, #ff3366, #ff6699);
             border: none;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 30px;
             color: white;
             font-family: 'Cairo', sans-serif;
@@ -119,7 +121,7 @@
             transition: all 0.3s;
             box-shadow: 0 5px 15px rgba(255, 51, 102, 0.3);
             position: fixed;
-            bottom: 80px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
             width: auto;
@@ -137,58 +139,52 @@
 
         @media (max-width: 600px) {
             body {
-                gap: 15px;
-                padding: 15px 10px 80px;
+                gap: 20px;
+                padding-top: 15px;
+                margin-top: 10px;
             }
 
             .content-wrapper {
-                gap: 20px;
-                margin-top: 30px;
+                gap: 25px;
             }
             
             .heart-container {
-                width: 150px;
-                height: 150px;
+                width: 130px;
+                height: 130px;
+                margin-top: 100px;
+                
             }
             
             .heart::before,
             .heart::after {
-                width: 75px;
-                height: 120px;
+                width: 65px;
+                height: 104px;
+                
             }
 
             .heart::before {
-                left: 75px;
-            }
-            
-            .name {
-                font-size: 2em;
-            }
-            
-            .message {
-                font-size: 1.3em;
-                margin: 15px 0;
-            }
-            
-            #secret-button {
-                font-size: 0.9em;
-                padding: 10px 20px;
-                min-width: 140px;
-                bottom: 60px;
-            }
-
-            .particle {
-                font-size: 24px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .message {
-                font-size: 1.1em;
+                left: 65px;
             }
             
             .name {
                 font-size: 1.8em;
+            }
+            
+            .message {
+                font-size: 1.2em;
+                margin: 10px 0;
+                margin-top: 50;
+            }
+            
+            #secret-button {
+                font-size: 0.85em;
+                padding: 6px 14px;
+                min-width: 120px;
+                bottom: 40px;
+            }
+
+            .particle {
+                font-size: 24px;
             }
         }
     </style>
@@ -219,19 +215,13 @@
                 src: ['heartbeat.mp3'],
                 loop: true,
                 volume: 0.4,
-                html5: true,
-                onload: function() {
-                    this._loop = true;
-                }
+                html5: true
             }),
             music: new Howl({
                 src: ['romantic-music.mp3'],
                 volume: 0.3,
                 loop: true,
-                html5: true,
-                onload: function() {
-                    this._loop = true;
-                }
+                html5: true
             })
         };
 
@@ -246,26 +236,17 @@
         const enableAudio = () => {
             if (!audioEnabled) {
                 Howler.autoUnlock = true;
-                Howler.usingWebAudio = true;
-                
-                if (!sounds.music.playing()) {
-                    sounds.music.play();
-                    sounds.music.loop(true);
-                }
-                
-                if (!sounds.heart.playing()) {
-                    sounds.heart.play();
-                    sounds.heart.loop(true);
-                }
-                
+                if (!sounds.music.playing()) sounds.music.play();
+                if (!sounds.heart.playing()) sounds.heart.play();
                 audioEnabled = true;
             }
         };
 
-        // تفعيل الصوت عند أي تفاعل
+        // تشغيل الصوت عند تحميل الصفحة
+        window.addEventListener('load', enableAudio);
+
         document.addEventListener('click', enableAudio);
         document.addEventListener('touchstart', enableAudio);
-        document.addEventListener('keydown', enableAudio);
 
         const createHearts = (x, y) => {
             const colors = ['#ff3366', '#ff6699', '#ff0066'];
@@ -275,10 +256,7 @@
                 heart.style.color = colors[Math.floor(Math.random() * colors.length)];
                 heart.style.left = `${x + (Math.random() - 0.5) * 150}px`;
                 heart.style.top = `${y + (Math.random() - 0.5) * 150}px`;
-                heart.style.transform = `
-                    scale(${0.5 + Math.random() * 0.8}) 
-                    rotate(${Math.random() * 360}deg)
-                `;
+                heart.style.transform = `scale(${0.5 + Math.random() * 0.8}) rotate(${Math.random() * 360}deg)`;
                 heart.textContent = Math.random() > 0.3 ? '❤️' : '💖';
                 document.body.appendChild(heart);
                 heart.addEventListener('animationend', () => heart.remove());
@@ -288,7 +266,7 @@
         document.getElementById('secret-button').addEventListener('click', (e) => {
             if (!audioEnabled) enableAudio();
             
-            sounds.magic.stop();
+            if (sounds.magic.playing()) sounds.magic.stop();
             sounds.magic.play();
             
             createHearts(e.clientX, e.clientY);
@@ -301,24 +279,14 @@
             }, 300);
         });
 
-        // تفعيل الصوت تلقائيا في حالة السماح
-        document.addEventListener('DOMContentLoaded', () => {
-            if (Howler.ctx.state === 'suspended') {
-                Howler.ctx.resume();
+        setInterval(() => {
+            if(audioEnabled) {
+                document.querySelector('.heart').style.animation = 'none';
+                setTimeout(() => {
+                    document.querySelector('.heart').style.animation = 'pulse 1s infinite';
+                }, 50);
             }
-        });
-
-        // تحسينات خاصة بiOS
-        if (/iP(hone|ad|od)/.test(navigator.userAgent)) {
-            document.body.addEventListener('touchstart', () => {
-                if (Howler.ctx && Howler.ctx.state === 'suspended') {
-                    Howler.ctx.resume().then(() => {
-                        if (!sounds.music.playing()) sounds.music.play();
-                        if (!sounds.heart.playing()) sounds.heart.play();
-                    });
-                }
-            }, { once: true });
-        }
+        }, 1000);
     </script>
 </body>
 </html>
